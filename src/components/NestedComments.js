@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import useOnScreen from '../hooks/useOnScreen';
 import styled from 'styled-components';
 import { comments } from '../comments';
 import icon from '../icons/expand_icon.png';
@@ -32,29 +33,12 @@ const ToggleExpand = styled.div`
   }
 `;
 
-function useOnScreen(ref) {
-
-  const [isIntersecting, setIntersecting] = useState(false)
-
-  const observer = new IntersectionObserver(
-    ([entry]) => setIntersecting(entry.isIntersecting)
-  )
-
-  useEffect(() => {
-    observer.observe(ref.current)
-    return () => { observer.disconnect() }
-  }, [])
-
-  return isIntersecting
-}
-
 const Comment = ({
   author,
   text,
   replies,
 }) => {
   const [expanded, setExpanded] = useState(true);
-  const commentRef = useRef();
   const sectionRef = useRef();
   const isVisible = useOnScreen(sectionRef);
   const toggleExpand = () => {
@@ -64,21 +48,34 @@ const Comment = ({
     }
   }
   const handleScrollIntoView = () => {
-    commentRef.current.scrollIntoView({
+    sectionRef.current.scrollIntoView({
       behaviour: 'smooth'
     })
   }
   return (
-    <StyledComment id={author.name} ref={commentRef}>
-      {expanded && <ToggleExpand onClick={toggleExpand}/>}
+    <StyledComment id={author.name}>
+      {
+        expanded 
+        && <ToggleExpand onClick={toggleExpand}/>
+      }
       <section id={author.name} ref={sectionRef}>
-        {!expanded && <img onClick={toggleExpand} src={icon} alt="expand-icon" id="expand-icon" />}
+        {
+          !expanded 
+          && <img onClick={toggleExpand} src={icon} alt="expand-icon" id="expand-icon" />
+        }
         <img id="author-dp" src={author.avatar} alt={`${author.name}'s profile pic'`} />
         <span>{author.name}</span>
       </section>
-      {expanded && <div>{text}</div>}
       {
-        replies && expanded && replies.map((item) => <Comment author={item.author} text={item.text} replies={item.replies}/>)
+        expanded 
+        && <div id="author-text">{text}</div>
+      }
+      {
+        replies 
+        && expanded 
+        && replies.map((item, index) =>
+         <Comment key={index} author={item.author} text={item.text} replies={item.replies}/>
+        )
       }
     </StyledComment>
   )
